@@ -1,0 +1,244 @@
+# PostgreSQL ConfigMap for initialization script
+resource "kubernetes_config_map" "postgresql_init" {
+  metadata {
+    name      = "init-data"
+    namespace = kubernetes_namespace.n8n.metadata[0].name
+    labels = {
+      service = "postgres-n8n"
+    }
+  }
+
+  data = {
+    "init-data.sh" = <<-EOT
+      #!/bin/bash
+      set -e
+
+      psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+          CREATE USER $POSTGRES_NON_ROOT_USER WITH PASSWORD '$POSTGRES_NON_ROOT_PASSWORD';
+          GRANT ALL PRIVILEGES ON DATABASE $POSTGRES_DB TO $POSTGRES_NON_ROOT_USER;
+          GRANT ALL ON SCHEMA public TO $POSTGRES_NON_ROOT_USER;
+      EOSQL
+    EOT
+  }
+}
+
+# PostgreSQL PersistentVolumeClaim
+resource "kubernetes_persistent_volume_claim" "postgresql" {
+  metadata {
+    name      = "postgresql-pv"
+    namespace = kubernetes_namespace.n8n.metadata[0].name
+    labels = {
+      service = "postgres-n8n"
+    }
+  }
+
+  spec {
+    access_modes = ["ReadWriteOnce"]
+    
+    resources {
+      requests = {
+        storage = var.postgresql_storage_size
+      }
+    }
+
+    storage_class_name = var.storage_class_name
+  }
+}
+
+# PostgreSQL Deployment
+resource "kubernetes_deployment" "postgresql" {
+  metadata {
+    name      = "postgres"
+    namespace = kubernetes_namespace.n8n.metadata[0].name
+    labels = {
+      service = "postgres-n8n"
+    }
+  }
+
+  spec {
+    replicas = 1
+
+    selector {
+      match_labels = {
+        service = "postgres-n8n"
+      }
+    }
+
+    strategy {
+      type = "RollingUpdate"
+      rolling_update {
+        max_surge       = "1"
+        max_unavailable = "1"
+      }
+    }
+
+    template {
+      metadata {
+        labels = {
+          service = "postgres-n8n"
+        }
+      }
+
+      spec {
+        restart_policy = "Always"
+
+        container {
+          name  = "postgres"
+          image = "postgres:${var.postgresql_version}"
+
+          port {
+            container_port = 5432
+          }
+
+          env {
+            name  = "PGDATA"
+            value = "/var/lib/postgresql/data/pgdata"
+          }
+
+          env {
+            name = "POSTGRES_USER"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.postgresql.metadata[0].name
+                key  = "POSTGRES_USER"
+              }
+            }
+          }
+
+          env {
+            name = "POSTGRES_PASSWORD"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.postgresql.metadata[0].name
+                key  = "POSTGRES_PASSWORD"
+              }
+            }
+          }
+
+          env {
+            name = "POSTGRES_DB"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.postgresql.metadata[0].name
+                key  = "POSTGRES_DB"
+              }
+            }
+          }
+
+          env {
+            name = "POSTGRES_NON_ROOT_USER"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.postgresql.metadata[0].name
+                key  = "POSTGRES_NON_ROOT_USER"
+              }
+            }
+          }
+
+          env {
+            name = "POSTGRES_NON_ROOT_PASSWORD"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.postgresql.metadata[0].name
+                key  = "POSTGRES_NON_ROOT_PASSWORD"
+              }
+            }
+          }
+
+          env {
+            name  = "POSTGRES_HOST"
+            value = "postgres-service"
+          }
+
+          env {
+            name  = "POSTGRES_PORT"
+            value = "5432"
+          }
+
+          volume_mount {
+            name       = "postgresql-pv"
+            mount_path = "/var/lib/postgresql/data"
+          }
+
+          volume_mount {
+            name       = "init-data"
+            mount_path = "/docker-entrypoint-initdb.d/init-n8n-user.sh"
+            sub_path   = "init-data.sh"
+          }
+
+          resources {
+            requests = {
+              cpu    = var.postgresql_cpu_request
+              memory = var.postgresql_memory_request
+            }
+            limits = {
+              cpu    = var.postgresql_cpu_limit
+              memory = var.postgresql_memory_limit
+            }
+          }
+
+          liveness_probe {
+            exec {
+              command = ["pg_isready", "-U", "postgres"]
+            }
+            initial_delay_seconds = 30
+            period_seconds        = 10
+            timeout_seconds       = 5
+            failure_threshold     = 3
+          }
+
+          readiness_probe {
+            exec {
+              command = ["pg_isready", "-U", "postgres"]
+            }
+            initial_delay_seconds = 5
+            period_seconds        = 10
+            timeout_seconds       = 5
+            failure_threshold     = 3
+          }
+        }
+
+        volume {
+          name = "postgresql-pv"
+          persistent_volume_claim {
+            claim_name = kubernetes_persistent_volume_claim.postgresql.metadata[0].name
+          }
+        }
+
+        volume {
+          name = "init-data"
+          config_map {
+            name         = kubernetes_config_map.postgresql_init.metadata[0].name
+            default_mode = "0744"
+          }
+        }
+      }
+    }
+  }
+}
+
+# PostgreSQL Service
+resource "kubernetes_service" "postgresql" {
+  metadata {
+    name      = "postgres-service"
+    namespace = kubernetes_namespace.n8n.metadata[0].name
+    labels = {
+      service = "postgres-n8n"
+    }
+  }
+
+  spec {
+    selector = {
+      service = "postgres-n8n"
+    }
+
+    port {
+      name        = "postgres"
+      port        = 5432
+      target_port = 5432
+      protocol    = "TCP"
+    }
+
+    type = "ClusterIP"
+  }
+}
