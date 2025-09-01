@@ -35,7 +35,7 @@ resource "kubernetes_secret" "postgresql" {
   }
 
   data = {
-    "POSTGRES_USER"              = "n8n" 
+    "POSTGRES_USER"              = "postgres" 
     "POSTGRES_PASSWORD"          = data.infisical_secrets.n8n_secrets.secrets["N8N_POSTGRES_PASSWORD"].value
     "POSTGRES_DB"                = "n8n"
     "POSTGRES_NON_ROOT_USER"     = data.infisical_secrets.n8n_secrets.secrets["N8N_POSTGRES_NON_ROOT_USER"].value
