@@ -85,16 +85,10 @@ variable "n8n_cpu_limit" {
   default     = "1000m"
 }
 
-variable "ingress_annotations" {
-  description = "Ingress annotations"
-  type        = map(string)
-  default     = {}
-}
-
 variable "postgresql_storage_size" {
   description = "Size of the persistent volume claim for PostgreSQL."
   type        = string
-  default     = "10Gi"
+  default     = "50Gi"
 }
 
 variable "postgresql_memory_limit" {
