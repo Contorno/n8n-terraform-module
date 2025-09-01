@@ -42,14 +42,44 @@ resource "kubernetes_deployment" "n8n" {
       spec {
         restart_policy = "Always"
 
+        security_context {
+          run_as_non_root = true
+          run_as_user     = 1000
+          run_as_group    = 1000
+          fs_group        = 1000
+          seccomp_profile {
+            type = "RuntimeDefault"
+          }
+        }
+
         init_container {
           name    = "volume-permissions"
           image   = "busybox:1.36"
-          command = ["sh", "-c", "chown 1000:1000 /data"]
+          command = ["sh", "-c", "chmod 755 /data && chown 1000:1000 /data"]
+
+          security_context {
+            run_as_non_root            = true
+            run_as_user                = 1000
+            run_as_group               = 1000
+            allow_privilege_escalation = false
+            read_only_root_filesystem  = false
+            capabilities {
+              drop = ["ALL"]
+              add  = ["CHOWN", "FOWNER"]
+            }
+            seccomp_profile {
+              type = "RuntimeDefault"
+            }
+          }
 
           volume_mount {
             name       = "n8n-claim0"
             mount_path = "/data"
+          }
+
+          volume_mount {
+            name       = "tmp"
+            mount_path = "/tmp"
           }
         }
 
@@ -58,6 +88,20 @@ resource "kubernetes_deployment" "n8n" {
           image   = "n8nio/n8n:${var.n8n_version}"
           command = ["/bin/sh"]
           args    = ["-c", "sleep 5; n8n start"]
+
+          security_context {
+            run_as_non_root            = true
+            run_as_user                = 1000
+            run_as_group               = 1000
+            allow_privilege_escalation = false
+            read_only_root_filesystem  = false
+            capabilities {
+              drop = ["ALL"]
+            }
+            seccomp_profile {
+              type = "RuntimeDefault"
+            }
+          }
 
           port {
             container_port = 5678
@@ -140,6 +184,11 @@ resource "kubernetes_deployment" "n8n" {
             mount_path = "/home/node/.n8n"
           }
 
+          volume_mount {
+            name       = "tmp"
+            mount_path = "/tmp"
+          }
+
           resources {
             requests = {
               memory = var.n8n_memory_request
@@ -155,6 +204,11 @@ resource "kubernetes_deployment" "n8n" {
           persistent_volume_claim {
             claim_name = kubernetes_persistent_volume_claim.n8n.metadata[0].name
           }
+        }
+
+        volume {
+          name = "tmp"
+          empty_dir {}
         }
 
         volume {
