@@ -36,10 +36,10 @@ resource "kubernetes_secret" "postgresql" {
 
   data = {
     "POSTGRES_USER"              = "n8n" 
-    "POSTGRES_PASSWORD"          = data.infisical_secrets.n8n_secrets.secrets["POSTGRES_PASSWORD"].value
+    "POSTGRES_PASSWORD"          = data.infisical_secrets.n8n_secrets.secrets["N8N_POSTGRES_PASSWORD"].value
     "POSTGRES_DB"                = "n8n"
-    "POSTGRES_NON_ROOT_USER"     = data.infisical_secrets.n8n_secrets.secrets["POSTGRES_NON_ROOT_USER"].value
-    "POSTGRES_NON_ROOT_PASSWORD" = data.infisical_secrets.n8n_secrets.secrets["POSTGRES_NON_ROOT_PASSWORD"].value
+    "POSTGRES_NON_ROOT_USER"     = data.infisical_secrets.n8n_secrets.secrets["N8N_POSTGRES_NON_ROOT_USER"].value
+    "POSTGRES_NON_ROOT_PASSWORD" = data.infisical_secrets.n8n_secrets.secrets["N8N_POSTGRES_NON_ROOT_PASSWORD"].value
   }
 
   type = "Opaque"  

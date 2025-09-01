@@ -11,7 +11,7 @@ variable "infisical_workspace_id" {
 variable "infisical_folder_path" {
   description = "Infisical folder path for secrets"
   type        = string
-  default     = "/"
+  default     = "/n8n"
 }
 
 variable "namespace_name" {
