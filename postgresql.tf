@@ -4,20 +4,22 @@ resource "kubernetes_config_map" "postgresql_init" {
     name      = "init-data"
     namespace = kubernetes_namespace.n8n.metadata[0].name
     labels = {
-      service = "postgres-n8n"
+      app = "postgres-n8n"
     }
   }
 
   data = {
     "init-data.sh" = <<-EOT
       #!/bin/bash
-      set -e
-
-      psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
-          CREATE USER $POSTGRES_NON_ROOT_USER WITH PASSWORD '$POSTGRES_NON_ROOT_PASSWORD';
-          GRANT ALL PRIVILEGES ON DATABASE $POSTGRES_DB TO $POSTGRES_NON_ROOT_USER;
-          GRANT ALL ON SCHEMA public TO $POSTGRES_NON_ROOT_USER;
-      EOSQL
+      set -e;
+      if [ -n "$${POSTGRES_NON_ROOT_USER:-}" ] && [ -n "$${POSTGRES_NON_ROOT_PASSWORD:-}" ]; then
+          psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+              CREATE USER "$${POSTGRES_NON_ROOT_USER}" WITH PASSWORD '$${POSTGRES_NON_ROOT_PASSWORD}';
+              GRANT ALL PRIVILEGES ON DATABASE $${POSTGRES_DB} TO "$${POSTGRES_NON_ROOT_USER}";
+          EOSQL
+      else
+          echo "SETUP INFO: No Environment variables given!"
+      fi
     EOT
   }
 }
@@ -28,7 +30,7 @@ resource "kubernetes_persistent_volume_claim" "postgresql" {
     name      = "postgresql-pv"
     namespace = kubernetes_namespace.n8n.metadata[0].name
     labels = {
-      service = "postgres-n8n"
+        app = "postgres-n8n"
     }
   }
 
@@ -51,7 +53,7 @@ resource "kubernetes_deployment" "postgresql" {
     name      = "postgres"
     namespace = kubernetes_namespace.n8n.metadata[0].name
     labels = {
-      service = "postgres-n8n"
+      app = "postgres-n8n"
     }
   }
 
@@ -60,7 +62,7 @@ resource "kubernetes_deployment" "postgresql" {
 
     selector {
       match_labels = {
-        service = "postgres-n8n"
+        app = "postgres-n8n"
       }
     }
 
@@ -75,7 +77,7 @@ resource "kubernetes_deployment" "postgresql" {
     template {
       metadata {
         labels = {
-          service = "postgres-n8n"
+          app = "postgres-n8n"
         }
       }
 
@@ -96,27 +98,7 @@ resource "kubernetes_deployment" "postgresql" {
           }
 
           env {
-            name = "POSTGRES_USER"
-            value_from {
-              secret_key_ref {
-                name = kubernetes_secret.postgresql.metadata[0].name
-                key  = "POSTGRES_USER"
-              }
-            }
-          }
-
-          env {
-            name = "POSTGRES_PASSWORD"
-            value_from {
-              secret_key_ref {
-                name = kubernetes_secret.postgresql.metadata[0].name
-                key  = "POSTGRES_PASSWORD"
-              }
-            }
-          }
-
-          env {
-            name = "POSTGRES_DB"
+            name = "DB_POSTGRESDB_DATABASE"
             value_from {
               secret_key_ref {
                 name = kubernetes_secret.postgresql.metadata[0].name
@@ -126,7 +108,7 @@ resource "kubernetes_deployment" "postgresql" {
           }
 
           env {
-            name = "POSTGRES_NON_ROOT_USER"
+            name = "DB_POSTGRESDB_USER"
             value_from {
               secret_key_ref {
                 name = kubernetes_secret.postgresql.metadata[0].name
@@ -136,7 +118,7 @@ resource "kubernetes_deployment" "postgresql" {
           }
 
           env {
-            name = "POSTGRES_NON_ROOT_PASSWORD"
+            name = "DB_POSTGRESDB_PASSWORD"
             value_from {
               secret_key_ref {
                 name = kubernetes_secret.postgresql.metadata[0].name
@@ -223,13 +205,13 @@ resource "kubernetes_service" "postgresql" {
     name      = "postgres-service"
     namespace = kubernetes_namespace.n8n.metadata[0].name
     labels = {
-      service = "postgres-n8n"
+      app = "postgres-n8n"
     }
   }
 
   spec {
     selector = {
-      service = "postgres-n8n"
+      app = "postgres-n8n"
     }
 
     port {

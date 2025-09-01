@@ -1,7 +1,7 @@
 # Get secrets from Infisical
 data "infisical_secrets" "n8n_secrets" {
   env_slug     = var.infisical_env_slug
-  project_slug = var.infisical_project_slug
+  workspace_id = var.infisical_workspace_id
   folder_path  = var.infisical_folder_path
 }
 
@@ -43,4 +43,8 @@ resource "kubernetes_secret" "postgresql" {
   }
 
   type = "Opaque"  
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }

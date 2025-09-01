@@ -3,8 +3,8 @@ variable "infisical_env_slug" {
   type        = string
 }
 
-variable "infisical_project_slug" {
-  description = "Infisical project slug" 
+variable "infisical_workspace_id" {
+  description = "Infisical workspace id" 
   type        = string
 }
 
@@ -51,7 +51,7 @@ variable "postgresql_host" {
 variable "timezone" {
   description = "Timezone for n8n"
   type        = string
-  default     = "UTC"
+  default     = "PST"
 }
 
 variable "n8n_storage_size" {
@@ -96,18 +96,6 @@ variable "ingress_annotations" {
   default     = {}
 }
 
-variable "enable_tls" {
-  description = "Enable TLS for ingress"
-  type        = bool
-  default     = true
-}
-
-variable "tls_secret_name" {
-  description = "TLS secret name"
-  type        = string
-  default     = "n8n-tls"
-}
-
 variable "postgresql_storage_size" {
   description = "Size of the persistent volume claim for PostgreSQL."
   type        = string
@@ -117,25 +105,25 @@ variable "postgresql_storage_size" {
 variable "postgresql_memory_limit" {
   description = "Memory limit for the PostgreSQL container."
   type        = string
-  default     = "1Gi"
+  default     = "4Gi"
 }
 
 variable "postgresql_cpu_request" {
   description = "CPU request for the PostgreSQL container."
   type        = string
-  default     = "100m"
+  default     = "1000m"
 }
 
 variable "postgresql_memory_request" {
   description = "Memory request for the PostgreSQL container."
   type        = string
-  default     = "256Mi"
+  default     = "1000Mi"
 }
 
 variable "postgresql_cpu_limit" {
   description = "CPU limit for the PostgreSQL container."
   type        = string
-  default     = "1000m"
+  default     = "4000m"
 }
 
 variable "postgresql_version" {
