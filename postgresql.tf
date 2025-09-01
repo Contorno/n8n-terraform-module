@@ -4,7 +4,7 @@ resource "kubernetes_config_map" "postgresql_init" {
     name      = "init-data"
     namespace = kubernetes_namespace.n8n.metadata[0].name
     labels = {
-      app = "postgres-n8n"
+      app = "n8n-postgres"
     }
   }
 
@@ -30,7 +30,7 @@ resource "kubernetes_persistent_volume_claim" "postgresql" {
     name      = "postgresql-pv"
     namespace = kubernetes_namespace.n8n.metadata[0].name
     labels = {
-        app = "postgres-n8n"
+        app = "n8n-postgres"
     }
   }
 
@@ -53,7 +53,7 @@ resource "kubernetes_deployment" "postgresql" {
     name      = "postgres"
     namespace = kubernetes_namespace.n8n.metadata[0].name
     labels = {
-      app = "postgres-n8n"
+      app = "n8n-postgres"
     }
   }
 
@@ -62,7 +62,7 @@ resource "kubernetes_deployment" "postgresql" {
 
     selector {
       match_labels = {
-        app = "postgres-n8n"
+        app = "n8n-postgres"
       }
     }
 
@@ -77,7 +77,7 @@ resource "kubernetes_deployment" "postgresql" {
     template {
       metadata {
         labels = {
-          app = "postgres-n8n"
+          app = "n8n-postgres"
         }
       }
 
@@ -205,13 +205,13 @@ resource "kubernetes_service" "postgresql" {
     name      = "postgres-service"
     namespace = kubernetes_namespace.n8n.metadata[0].name
     labels = {
-      app = "postgres-n8n"
+      app = "n8n-postgres"
     }
   }
 
   spec {
     selector = {
-      app = "postgres-n8n"
+      app = "n8n-postgres"
     }
 
     port {
