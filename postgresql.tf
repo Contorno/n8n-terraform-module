@@ -171,11 +171,6 @@ resource "kubernetes_deployment" "postgresql" {
           }
 
           env {
-            name  = "POSTGRES_HOST"
-            value = "postgres-service"
-          }
-
-          env {
             name  = "POSTGRES_PORT"
             value = "5432"
           }
