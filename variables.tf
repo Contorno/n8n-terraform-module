@@ -43,15 +43,10 @@ variable "n8n_host" {
   type        = string
 }
 
-variable "postgresql_host" {
-  description = "PostgreSQL hostname"
-  type        = string
-}
-
 variable "timezone" {
   description = "Timezone for n8n"
   type        = string
-  default     = "PST"
+  default     = "America/Los_Angeles"
 }
 
 variable "n8n_storage_size" {

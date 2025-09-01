@@ -64,11 +64,15 @@ resource "kubernetes_deployment" "n8n" {
           }
 
           env {
+            name  = "WEBHOOK_URL"
+            value = "https://${var.n8n_host}/"
+          }
+          env {
             name  = "N8N_HOST"
             value = var.n8n_host
           }
           env {
-            name  = "TZ"
+            name  = "GENERIC_TIMEZONE"
             value = var.timezone
           }
           env {
@@ -113,7 +117,7 @@ resource "kubernetes_deployment" "n8n" {
 
           env {
             name  = "N8N_PROTOCOL"
-            value = "http"
+            value = "https"
           }
 
           env {
