@@ -30,13 +30,13 @@ resource "kubernetes_persistent_volume_claim" "postgresql" {
     name      = "${var.name}-postgresql-pvc"
     namespace = kubernetes_namespace.n8n.metadata[0].name
     labels = {
-        app = "n8n-postgres"
+      app = "n8n-postgres"
     }
   }
 
   spec {
     access_modes = ["ReadWriteOnce"]
-    
+
     resources {
       requests = {
         storage = var.postgresql_storage_size
@@ -84,9 +84,32 @@ resource "kubernetes_deployment" "postgresql" {
       spec {
         restart_policy = "Always"
 
+        security_context {
+          run_as_non_root = true
+          run_as_user     = 999 # PostgreSQL user ID
+          run_as_group    = 999 # PostgreSQL group ID
+          fs_group        = 999
+          seccomp_profile {
+            type = "RuntimeDefault"
+          }
+        }
         container {
           name  = "postgres"
           image = "postgres:${var.postgresql_version}"
+
+          security_context {
+            run_as_non_root            = true
+            run_as_user                = 999
+            run_as_group               = 999
+            allow_privilege_escalation = false
+            read_only_root_filesystem  = false
+            capabilities {
+              drop = ["ALL"]
+            }
+            seccomp_profile {
+              type = "RuntimeDefault"
+            }
+          }
 
           port {
             container_port = 5432
@@ -148,6 +171,16 @@ resource "kubernetes_deployment" "postgresql" {
             sub_path   = "init-data.sh"
           }
 
+          volume_mount {
+            name       = "tmp"
+            mount_path = "/tmp"
+          }
+
+          volume_mount {
+            name       = "run"
+            mount_path = "/var/run/postgresql"
+          }
+
           resources {
             requests = {
               cpu    = var.postgresql_cpu_request
@@ -193,6 +226,16 @@ resource "kubernetes_deployment" "postgresql" {
             name         = kubernetes_config_map.postgresql_init.metadata[0].name
             default_mode = "0744"
           }
+        }
+
+        volume {
+          name = "tmp"
+          empty_dir {}
+        }
+
+        volume {
+          name = "run"
+          empty_dir {}
         }
       }
     }
