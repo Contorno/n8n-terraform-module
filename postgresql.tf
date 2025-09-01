@@ -122,12 +122,7 @@ resource "kubernetes_deployment" "postgresql" {
 
           env {
             name = "POSTGRES_DB"
-            value_from {
-              secret_key_ref {
-                name = kubernetes_secret.postgresql.metadata[0].name
-                key  = "POSTGRES_DB"
-              }
-            }
+            value = "n8n" 
           }
 
           env {

@@ -3,9 +3,9 @@ resource "kubernetes_namespace" "n8n" {
     name = var.namespace_name
     labels = {
       name                                 = var.namespace_name
-      "pod-security.kubernetes.io/enforce" = "restricted"
-      "pod-security.kubernetes.io/audit"   = "restricted"
-      "pod-security.kubernetes.io/warn"    = "restricted"
+      "pod-security.kubernetes.io/enforce" = "baseline"
+      "pod-security.kubernetes.io/audit"   = "baseline"
+      "pod-security.kubernetes.io/warn"    = "baseline"
     }
   }
 }
