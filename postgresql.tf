@@ -121,7 +121,7 @@ resource "kubernetes_deployment" "postgresql" {
           }
 
           env {
-            name = "DB_POSTGRESDB_DATABASE"
+            name = "POSTGRES_DB"
             value_from {
               secret_key_ref {
                 name = kubernetes_secret.postgresql.metadata[0].name
@@ -131,7 +131,27 @@ resource "kubernetes_deployment" "postgresql" {
           }
 
           env {
-            name = "DB_POSTGRESDB_USER"
+            name = "POSTGRES_USER"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.postgresql.metadata[0].name
+                key  = "POSTGRES_USER"
+              }
+            }
+          }
+
+          env {
+            name = "POSTGRES_PASSWORD"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.postgresql.metadata[0].name
+                key  = "POSTGRES_PASSWORD"
+              }
+            }
+          }
+
+          env {
+            name = "POSTGRES_NON_ROOT_USER"
             value_from {
               secret_key_ref {
                 name = kubernetes_secret.postgresql.metadata[0].name
@@ -141,7 +161,7 @@ resource "kubernetes_deployment" "postgresql" {
           }
 
           env {
-            name = "DB_POSTGRESDB_PASSWORD"
+            name = "POSTGRES_NON_ROOT_PASSWORD"
             value_from {
               secret_key_ref {
                 name = kubernetes_secret.postgresql.metadata[0].name
