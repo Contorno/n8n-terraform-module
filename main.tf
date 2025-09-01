@@ -95,7 +95,7 @@ resource "kubernetes_deployment" "n8n" {
 
           env {
             name  = "DB_POSTGRESDB_HOST"
-            value = "postgres-service.${kubernetes_namespace.n8n.metadata[0].name}.svc.cluster.local"
+            value = "${var.name}-postgresql-service.${kubernetes_namespace.n8n.metadata[0].name}.svc.cluster.local"
           }
 
           env {
@@ -209,7 +209,7 @@ resource "kubernetes_service" "n8n" {
 
   spec {
     selector = {
-      service = "n8n"
+      app = "n8n"
     }
 
     port {
