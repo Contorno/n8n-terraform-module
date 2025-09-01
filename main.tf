@@ -231,7 +231,7 @@ resource "kubernetes_deployment" "n8n" {
 
 resource "kubernetes_service" "n8n" {
   metadata {
-    name      = "n8n"
+    name      = "${var.name}-service"
     namespace = kubernetes_namespace.n8n.metadata[0].name
     labels = {
       app = "n8n"
@@ -253,33 +253,11 @@ resource "kubernetes_service" "n8n" {
   }
 }
 
-resource "kubernetes_ingress_v1" "n8n_tailscale" {
-  metadata {
-    name      = "${var.name}-tailscale"
-    namespace = kubernetes_namespace.n8n.metadata[0].name
-  }
 
-  spec {
-    ingress_class_name = "tailscale"
-
-    default_backend {
-      service {
-        name = kubernetes_service.n8n.metadata[0].name
-        port {
-          number = 5678
-        }
-      }
-    }
-
-    tls {
-      hosts = ["n8n"]
-    }
-  }
-}
 
 resource "kubernetes_persistent_volume_claim" "n8n" {
   metadata {
-    name      = "n8n-claim0"
+    name      = "${var.name}-pv-claim0"
     namespace = kubernetes_namespace.n8n.metadata[0].name
     labels = {
       app = "n8n"

@@ -27,7 +27,7 @@ resource "kubernetes_config_map" "postgresql_init" {
 # PostgreSQL PersistentVolumeClaim
 resource "kubernetes_persistent_volume_claim" "postgresql" {
   metadata {
-    name      = "postgresql-pv"
+    name      = "${var.name}-postgresql-pvc"
     namespace = kubernetes_namespace.n8n.metadata[0].name
     labels = {
         app = "n8n-postgres"
@@ -50,7 +50,7 @@ resource "kubernetes_persistent_volume_claim" "postgresql" {
 # PostgreSQL Deployment
 resource "kubernetes_deployment" "postgresql" {
   metadata {
-    name      = "postgres"
+    name      = "${var.name}-postgresql"
     namespace = kubernetes_namespace.n8n.metadata[0].name
     labels = {
       app = "n8n-postgres"
@@ -202,7 +202,7 @@ resource "kubernetes_deployment" "postgresql" {
 # PostgreSQL Service
 resource "kubernetes_service" "postgresql" {
   metadata {
-    name      = "postgres-service"
+    name      = "${var.name}-postgresql-service"
     namespace = kubernetes_namespace.n8n.metadata[0].name
     labels = {
       app = "n8n-postgres"

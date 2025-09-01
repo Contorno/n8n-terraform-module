@@ -1,4 +1,4 @@
-resource "kubernetes_ingress_v1" "n8n" {
+resource "kubernetes_ingress_v1" "n8n_tailscale" {
   metadata {
     name      = "${var.name}-tailscale"
     namespace = kubernetes_namespace.n8n.metadata[0].name

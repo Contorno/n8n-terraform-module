@@ -7,7 +7,7 @@ data "infisical_secrets" "n8n_secrets" {
 
 resource "kubernetes_secret" "n8n" {
   metadata {
-    name      = "n8n-secret"
+    name      = "${var.name}-secret"
     namespace = kubernetes_namespace.n8n.metadata[0].name
     labels = {
       app = "n8n"
@@ -27,7 +27,7 @@ resource "kubernetes_secret" "n8n" {
 
 resource "kubernetes_secret" "postgresql" {
   metadata {
-    name      = "n8n-postgresql-secret"
+    name      = "${var.name}-postgresql-secret"
     namespace = kubernetes_namespace.n8n.metadata[0].name
     labels = {
       app = "n8n"
