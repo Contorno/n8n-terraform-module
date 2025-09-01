@@ -52,37 +52,6 @@ resource "kubernetes_deployment" "n8n" {
           }
         }
 
-        init_container {
-          name    = "volume-permissions"
-          image   = "busybox:1.36"
-          command = ["sh", "-c", "chmod 755 /data && chown 1000:1000 /data"]
-
-          security_context {
-            run_as_non_root            = true
-            run_as_user                = 1000
-            run_as_group               = 1000
-            allow_privilege_escalation = false
-            read_only_root_filesystem  = false
-            capabilities {
-              drop = ["ALL"]
-              add  = ["CHOWN", "FOWNER"]
-            }
-            seccomp_profile {
-              type = "RuntimeDefault"
-            }
-          }
-
-          volume_mount {
-            name       = "n8n-claim0"
-            mount_path = "/data"
-          }
-
-          volume_mount {
-            name       = "tmp"
-            mount_path = "/tmp"
-          }
-        }
-
         container {
           name    = "n8n"
           image   = "n8nio/n8n:${var.n8n_version}"
