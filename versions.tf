@@ -8,11 +8,11 @@ terraform {
     }
     helm = {
       source  = "hashicorp/helm"
-      version = "3.0.2"
+      version = "~> 3.0.2"
     }
     infisical = {
       source  = "infisical/infisical"
-      version = "~> 0.11.0"
+      version = "~> 0.15.28"
     }
   }
 }
