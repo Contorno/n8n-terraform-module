@@ -21,7 +21,7 @@ resource "helm_release" "n8n" {
       main = {
         persistence = {
           enabled      = true
-          access_mode  = "ReadWriteOnce"
+          accessMode   = "ReadWriteOnce" # Changed from access_mode
           storageClass = var.storage_class_name
           size         = var.n8n_storage_size
         }
@@ -43,8 +43,8 @@ resource "helm_release" "n8n" {
         enabled = true
         primary = {
           persistence = {
-            enabled       = true
-            size          = "20Gi"
+            enabled = true
+            size    = "20Gi"
           }
         }
       }
@@ -63,7 +63,7 @@ resource "helm_release" "n8n" {
       }
       webhook = {
         mode = "regular"
-        url  = "https://n8n.tail9ae2ce.ts.net/"
+        url  = "https://${var.n8n_host}/" # Use variable instead of hardcoded
       }
       workflowHistory = {
         enabled   = true
@@ -78,11 +78,17 @@ resource "helm_release" "n8n" {
       nodeSelector = {
         "kubernetes.io/hostname" = "k8s"
       }
-      timezone                    = "America/Los_Angeles"
-      existingEncryptionKeySecret = "${kubernetes_secret.n8n.metadata[0].name}"
+      timezone = "America/Los_Angeles"
+
+      # Encryption key configuration
+      encryptionKey = {
+        existingSecret    = kubernetes_secret.n8n.metadata[0].name
+        existingSecretKey = "N8N_ENCRYPTION_KEY"
+      }
+
+      # Fixed ingress configuration
       ingress = {
-        enabled = true
-        hosts   = [var.n8n_host]
+        enabled   = true
         className = var.ingress_class_name
       }
     })
