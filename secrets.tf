@@ -5,6 +5,10 @@ ephemeral "infisical_secret" "n8n_encryption_key" {
   folder_path  = var.infisical_folder_path
 }
 
+locals {
+  n8n_encryption_key = ephemeral.infisical_secret.n8n_encryption_key.value
+}
+
 resource "kubernetes_secret" "n8n" {
   metadata {
     name      = "${var.namespace_name}-secret"
@@ -15,7 +19,7 @@ resource "kubernetes_secret" "n8n" {
   }
 
   data = {
-    "N8N_ENCRYPTION_KEY" = ephemeral.infisical_secret.n8n_encryption_key.value
+    "N8N_ENCRYPTION_KEY" = local.n8n_encryption_key
   }
 
   type = "Opaque"
