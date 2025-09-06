@@ -23,7 +23,7 @@ resource "helm_release" "n8n" {
           enabled      = true
           access_mode  = "ReadWriteOnce"
           storageClass = var.storage_class_name
-          size         = "50Gi"
+          size         = var.n8n_storage_size
         }
         resources = {
           requests = {
@@ -82,7 +82,7 @@ resource "helm_release" "n8n" {
       existingEncryptionKeySecret = "${kubernetes_secret.n8n_encryption_key.metadata[0].name}"
       ingress = {
         enabled = true
-        hosts   = ["n8n"]
+        hosts   = [var.n8n_host]
         className = var.ingress_class_name
       }
     })

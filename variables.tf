@@ -37,3 +37,8 @@ variable "ingress_class_name" {
     type        = string
     default     = "tailscale"
 }
+variable "n8n_host" {
+    description = "value for n8n host"
+    type        = string
+    default     = "n8n"
+}
