@@ -79,7 +79,7 @@ resource "helm_release" "n8n" {
         "kubernetes.io/hostname" = "k8s"
       }
       timezone                    = "America/Los_Angeles"
-      existingEncryptionKeySecret = "${kubernetes_secret.n8n_encryption_key.metadata[0].name}"
+      existingEncryptionKeySecret = "${kubernetes_secret.n8n.metadata[0].name}"
       ingress = {
         enabled = true
         hosts   = [var.n8n_host]
