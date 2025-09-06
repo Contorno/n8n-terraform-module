@@ -1,12 +1,7 @@
-ephemeral "infisical_secret" "n8n_encryption_key" {
-  name         = "N8N_ENCRYPTION_KEY"
+data "infisical_secrets" "n8n_secrets" {
   env_slug     = var.infisical_env_slug
   workspace_id = var.infisical_workspace_id
   folder_path  = var.infisical_folder_path
-}
-
-locals {
-  n8n_encryption_key = ephemeral.infisical_secret.n8n_encryption_key.value
 }
 
 resource "kubernetes_secret" "n8n" {
@@ -19,12 +14,8 @@ resource "kubernetes_secret" "n8n" {
   }
 
   data = {
-    "N8N_ENCRYPTION_KEY" = local.n8n_encryption_key
+    "N8N_ENCRYPTION_KEY" = data.infisical_secrets.n8n_secrets.secrets["N8N_ENCRYPTION_KEY"].value
   }
 
   type = "Opaque"
-
-  lifecycle {
-    prevent_destroy = true
-  }
 }
