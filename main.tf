@@ -89,8 +89,7 @@ resource "helm_release" "n8n" {
   ]
 
   depends_on = [
-    kubernetes_secret.n8n_encryption_key,
-    kubernetes_secret.redis,
-    kubernetes_persistent_volume_claim.postgresql_data
+    kubernetes_secret.n8n,
+    kubernetes_secret.redis
   ]
 }
