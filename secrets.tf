@@ -1,3 +1,4 @@
+# Get secrets from Infisical
 data "infisical_secrets" "n8n_secrets" {
   env_slug     = var.infisical_env_slug
   workspace_id = var.infisical_workspace_id
@@ -6,7 +7,7 @@ data "infisical_secrets" "n8n_secrets" {
 
 resource "kubernetes_secret" "n8n" {
   metadata {
-    name      = "${var.namespace_name}-secret"
+    name      = "${var.name}-secret"
     namespace = kubernetes_namespace.n8n.metadata[0].name
     labels = {
       app = "n8n"
@@ -18,4 +19,32 @@ resource "kubernetes_secret" "n8n" {
   }
 
   type = "Opaque"
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+resource "kubernetes_secret" "postgresql" {
+  metadata {
+    name      = "${var.name}-postgresql-secret"
+    namespace = kubernetes_namespace.n8n.metadata[0].name
+    labels = {
+      app = "n8n"
+    }
+  }
+
+  data = {
+    "POSTGRES_USER"              = "postgres" 
+    "POSTGRES_PASSWORD"          = data.infisical_secrets.n8n_secrets.secrets["N8N_POSTGRES_PASSWORD"].value
+    "POSTGRES_DB"                = "n8n"
+    "POSTGRES_NON_ROOT_USER"     = data.infisical_secrets.n8n_secrets.secrets["N8N_POSTGRES_NON_ROOT_USER"].value
+    "POSTGRES_NON_ROOT_PASSWORD" = data.infisical_secrets.n8n_secrets.secrets["N8N_POSTGRES_NON_ROOT_PASSWORD"].value
+  }
+
+  type = "Opaque"  
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
