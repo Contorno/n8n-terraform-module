@@ -36,6 +36,9 @@ resource "helm_release" "n8n" {
           }
         }
       }
+
+      existingEncryptionKeySecret = "${kubernetes_secret.n8n.metadata[0].name}"
+
       db = {
         type = "postgresdb"
       }
@@ -79,12 +82,6 @@ resource "helm_release" "n8n" {
         "kubernetes.io/hostname" = "k8s"
       }
       timezone = "America/Los_Angeles"
-
-      # Encryption key configuration
-      encryptionKey = {
-        existingSecret    = kubernetes_secret.n8n.metadata[0].name
-        existingSecretKey = "N8N_ENCRYPTION_KEY"
-      }
 
       # Fixed ingress configuration
       ingress = {
