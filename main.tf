@@ -1,247 +1,96 @@
-resource "kubernetes_namespace" "n8n" {
-  metadata {
-    name = var.namespace_name
-    labels = {
-      name                                 = var.namespace_name
-      "pod-security.kubernetes.io/enforce" = "baseline"
-      "pod-security.kubernetes.io/audit"   = "baseline"
-      "pod-security.kubernetes.io/warn"    = "baseline"
-    }
-  }
-}
+resource "helm_release" "n8n" {
+  name       = "n8n"
+  repository = "https://community-charts.github.io/helm-charts"
+  chart      = "n8n"
+  version    = "1.15.4"
 
-resource "kubernetes_deployment" "n8n" {
-  metadata {
-    name      = "n8n"
-    namespace = kubernetes_namespace.n8n.metadata[0].name
-    labels = {
-      app = "n8n"
-    }
-  }
+  namespace        = kubernetes_namespace.n8n.metadata[0].name
+  create_namespace = false
 
-  spec {
-    replicas = var.n8n_replicas
-
-    selector {
-      match_labels = {
-        app = "n8n"
+  values = [
+    yamlencode({
+      image = {
+        repository = "n8nio/n8n"
+        tag        = "1.109.2"
+        pullPolicy = "IfNotPresent"
       }
-    }
-
-    strategy {
-      type = "Recreate"
-    }
-
-    template {
-      metadata {
-        labels = {
-          app = "n8n"
-        }
+      log = {
+        level  = "info"
+        output = ["console"]
       }
-
-      spec {
-        restart_policy = "Always"
-
-        security_context {
-          run_as_non_root = true
-          run_as_user     = 1000
-          run_as_group    = 1000
-          fs_group        = 1000
-          seccomp_profile {
-            type = "RuntimeDefault"
-          }
+      main = {
+        persistence = {
+          enabled      = true
+          access_mode  = "ReadWriteOnce"
+          storageClass = var.storage_class_name
+          size         = "50Gi"
         }
-
-        container {
-          name    = "n8n"
-          image   = "n8nio/n8n:${var.n8n_version}"
-          command = ["/bin/sh"]
-          args    = ["-c", "sleep 5; n8n start"]
-
-          security_context {
-            run_as_non_root            = true
-            run_as_user                = 1000
-            run_as_group               = 1000
-            allow_privilege_escalation = false
-            read_only_root_filesystem  = false
-            capabilities {
-              drop = ["ALL"]
-            }
-            seccomp_profile {
-              type = "RuntimeDefault"
-            }
+        resources = {
+          requests = {
+            memory = "512Mi"
+            cpu    = "500m"
           }
-
-          port {
-            container_port = 5678
-          }
-
-          env {
-            name  = "WEBHOOK_URL"
-            value = "https://${var.n8n_host}/"
-          }
-          env {
-            name  = "N8N_HOST"
-            value = var.n8n_host
-          }
-          env {
-            name  = "GENERIC_TIMEZONE"
-            value = var.timezone
-          }
-          env {
-            name  = "DB_TYPE"
-            value = "postgresdb"
-          }
-
-          env {
-            name  = "DB_POSTGRESDB_HOST"
-            value = "${var.name}-postgresql-service.${kubernetes_namespace.n8n.metadata[0].name}.svc.cluster.local"
-          }
-
-          env {
-            name  = "DB_POSTGRESDB_PORT"
-            value = "5432"
-          }
-
-          env {
-            name  = "DB_POSTGRESDB_DATABASE"
-            value = "n8n"
-          }
-
-          env {
-            name = "DB_POSTGRESDB_USER"
-            value_from {
-              secret_key_ref {
-                name = kubernetes_secret.postgresql.metadata[0].name
-                key  = "POSTGRES_NON_ROOT_USER"
-              }
-            }
-          }
-
-          env {
-            name = "DB_POSTGRESDB_PASSWORD"
-            value_from {
-              secret_key_ref {
-                name = kubernetes_secret.postgresql.metadata[0].name
-                key  = "POSTGRES_NON_ROOT_PASSWORD"
-              }
-            }
-          }
-
-          env {
-            name  = "N8N_PROTOCOL"
-            value = "https"
-          }
-
-          env {
-            name  = "N8N_PORT"
-            value = "5678"
-          }
-
-          env {
-            name = "N8N_ENCRYPTION_KEY"
-            value_from {
-              secret_key_ref {
-                name = kubernetes_secret.n8n.metadata[0].name
-                key  = "N8N_ENCRYPTION_KEY"
-              }
-            }
-          }
-
-          volume_mount {
-            name       = "n8n-claim0"
-            mount_path = "/home/node/.n8n"
-          }
-
-          volume_mount {
-            name       = "tmp"
-            mount_path = "/tmp"
-          }
-
-          resources {
-            requests = {
-              memory = var.n8n_memory_request
-            }
-            limits = {
-              memory = var.n8n_memory_limit
-            }
-          }
-        }
-
-        volume {
-          name = "n8n-claim0"
-          persistent_volume_claim {
-            claim_name = kubernetes_persistent_volume_claim.n8n.metadata[0].name
-          }
-        }
-
-        volume {
-          name = "tmp"
-          empty_dir {}
-        }
-
-        volume {
-          name = "n8n-secret"
-          secret {
-            secret_name = kubernetes_secret.n8n.metadata[0].name
-          }
-        }
-
-        volume {
-          name = "postgres-secret"
-          secret {
-            secret_name = kubernetes_secret.postgresql.metadata[0].name
+          limits = {
+            memory = "2Gi"
+            cpu    = "2000m"
           }
         }
       }
-    }
-  }
-}
-
-resource "kubernetes_service" "n8n" {
-  metadata {
-    name      = "${var.name}-service"
-    namespace = kubernetes_namespace.n8n.metadata[0].name
-    labels = {
-      app = "n8n"
-    }
-  }
-
-  spec {
-    selector = {
-      app = "n8n"
-    }
-
-    port {
-      port        = 5678
-      target_port = 5678
-      protocol    = "TCP"
-    }
-
-    type = "ClusterIP"
-  }
-}
-
-
-
-resource "kubernetes_persistent_volume_claim" "n8n" {
-  metadata {
-    name      = "${var.name}-pv-claim0"
-    namespace = kubernetes_namespace.n8n.metadata[0].name
-    labels = {
-      app = "n8n"
-    }
-  }
-
-  spec {
-    access_modes = ["ReadWriteOnce"]
-
-    resources {
-      requests = {
-        storage = var.n8n_storage_size
+      db = {
+        type = "postgresdb"
       }
-    }
+      postgresql = {
+        enabled = true
+        primary = {
+          persistence = {
+            enabled       = true
+            size          = "20Gi"
+          }
+        }
+      }
+      worker = {
+        mode = "regular"
+      }
+      redis = {
+        enabled      = true
+        architecture = "standalone"
+        master = {
+          persistence = {
+            enabled = true
+            size    = "5Gi"
+          }
+        }
+      }
+      webhook = {
+        mode = "regular"
+        url  = "https://n8n.tail9ae2ce.ts.net/"
+      }
+      workflowHistory = {
+        enabled   = true
+        pruneTime = 336
+      }
+      service = {
+        enabled = true
+        name    = "http"
+        port    = 5678
+        type    = "ClusterIP"
+      }
+      nodeSelector = {
+        "kubernetes.io/hostname" = "k8s"
+      }
+      timezone                    = "America/Los_Angeles"
+      existingEncryptionKeySecret = "${kubernetes_secret.n8n_encryption_key.metadata[0].name}"
+      ingress = {
+        enabled = true
+        hosts   = ["n8n"]
+        className = var.ingress_class_name
+      }
+    })
+  ]
 
-    storage_class_name = var.storage_class_name
-  }
+  depends_on = [
+    kubernetes_secret.n8n_encryption_key,
+    kubernetes_secret.redis,
+    kubernetes_persistent_volume_claim.postgresql_data
+  ]
 }
