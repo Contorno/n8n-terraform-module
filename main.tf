@@ -89,7 +89,6 @@ resource "helm_release" "n8n" {
   ]
 
   depends_on = [
-    kubernetes_secret.n8n,
-    kubernetes_secret.redis
+    kubernetes_secret.n8n
   ]
 }
