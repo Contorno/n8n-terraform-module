@@ -34,6 +34,14 @@ resource "kubernetes_ingress_v1" "n8n_webhooks" {
       "cert-manager.io/cluster-issuer"                    = "letsencrypt-prod"
       "nginx.ingress.kubernetes.io/ssl-redirect"          = "true"
       "nginx.ingress.kubernetes.io/force-ssl-redirect"    = "true"
+      "nginx.ingress.kubernetes.io/configuration-snippet" = <<-EOT
+        # Block everything except webhook paths
+        location / {
+          if ($request_uri !~ ^/webhook) {
+            return 403 '{"error": "Access denied"}';
+          }
+        }
+    EOT
     }
   }
 
