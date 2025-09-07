@@ -21,7 +21,7 @@ resource "kubernetes_ingress_v1" "n8n_tailscale" {
     }
 
     tls {
-      hosts = ["n8n"]
+      hosts = [var.n8n_host]
     }
   }
 }
