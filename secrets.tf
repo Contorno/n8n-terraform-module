@@ -24,27 +24,3 @@ resource "kubernetes_secret" "n8n" {
     prevent_destroy = true
   }
 }
-
-resource "kubernetes_secret" "postgresql" {
-  metadata {
-    name      = "${var.name}-postgresql-secret"
-    namespace = kubernetes_namespace.n8n.metadata[0].name
-    labels = {
-      app = "n8n"
-    }
-  }
-
-  data = {
-    "POSTGRES_USER"              = "postgres" 
-    "POSTGRES_PASSWORD"          = data.infisical_secrets.n8n_secrets.secrets["N8N_POSTGRES_PASSWORD"].value
-    "POSTGRES_DB"                = "n8n"
-    "POSTGRES_NON_ROOT_USER"     = data.infisical_secrets.n8n_secrets.secrets["N8N_POSTGRES_NON_ROOT_USER"].value
-    "POSTGRES_NON_ROOT_PASSWORD" = data.infisical_secrets.n8n_secrets.secrets["N8N_POSTGRES_NON_ROOT_PASSWORD"].value
-  }
-
-  type = "Opaque"  
-
-  lifecycle {
-    prevent_destroy = true
-  }
-}

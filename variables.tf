@@ -84,39 +84,3 @@ variable "n8n_cpu_limit" {
   type        = string
   default     = "1000m"
 }
-
-variable "postgresql_storage_size" {
-  description = "Size of the persistent volume claim for PostgreSQL."
-  type        = string
-  default     = "50Gi"
-}
-
-variable "postgresql_memory_limit" {
-  description = "Memory limit for the PostgreSQL container."
-  type        = string
-  default     = "4Gi"
-}
-
-variable "postgresql_cpu_request" {
-  description = "CPU request for the PostgreSQL container."
-  type        = string
-  default     = "1000m"
-}
-
-variable "postgresql_memory_request" {
-  description = "Memory request for the PostgreSQL container."
-  type        = string
-  default     = "1000Mi"
-}
-
-variable "postgresql_cpu_limit" {
-  description = "CPU limit for the PostgreSQL container."
-  type        = string
-  default     = "4000m"
-}
-
-variable "postgresql_version" {
-  description = "PostgreSQL image version tag."
-  type        = string
-  default     = "17"
-}

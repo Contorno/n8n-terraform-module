@@ -78,54 +78,32 @@ resource "kubernetes_deployment" "n8n" {
           }
           env {
             name  = "DB_TYPE"
-            value = "postgresdb"
+            value = "sqlite"
           }
-
-          env {
-            name  = "DB_POSTGRESDB_HOST"
-            value = "${var.name}-postgresql-service.${kubernetes_namespace.n8n.metadata[0].name}.svc.cluster.local"
-          }
-
-          env {
-            name  = "DB_POSTGRESDB_PORT"
-            value = "5432"
-          }
-
-          env {
-            name  = "DB_POSTGRESDB_DATABASE"
-            value = "n8n"
-          }
-
-          env {
-            name = "DB_POSTGRESDB_USER"
-            value_from {
-              secret_key_ref {
-                name = kubernetes_secret.postgresql.metadata[0].name
-                key  = "POSTGRES_NON_ROOT_USER"
-              }
-            }
-          }
-
-          env {
-            name = "DB_POSTGRESDB_PASSWORD"
-            value_from {
-              secret_key_ref {
-                name = kubernetes_secret.postgresql.metadata[0].name
-                key  = "POSTGRES_NON_ROOT_PASSWORD"
-              }
-            }
-          }
-
           env {
             name  = "N8N_PROTOCOL"
-            value = "https"
+            value = "http"
           }
-
           env {
             name  = "N8N_PORT"
             value = "5678"
           }
-
+          env {
+            name  = "DB_SQLITE_POOL_SIZE"
+            value = "2"
+          }
+          env {
+            name  = "N8N_HIRING_BANNER_ENABLED"
+            value = "false"
+          }
+          env {
+            name  = "N8N_REINSTALL_MISSING_PACKAGES"
+            value = "true"
+          }
+          env {
+            name  = "N8N_METRICS"
+            value = "true"
+          }
           env {
             name = "N8N_ENCRYPTION_KEY"
             value_from {
@@ -172,13 +150,6 @@ resource "kubernetes_deployment" "n8n" {
           name = "n8n-secret"
           secret {
             secret_name = kubernetes_secret.n8n.metadata[0].name
-          }
-        }
-
-        volume {
-          name = "postgres-secret"
-          secret {
-            secret_name = kubernetes_secret.postgresql.metadata[0].name
           }
         }
       }
