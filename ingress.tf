@@ -46,7 +46,7 @@ resource "kubernetes_ingress_v1" "n8n_webhooks" {
   }
 
   spec {
-    ingress_class_name = var.ingress_class_name
+    ingress_class_name = "nginx"
 
     tls {
       hosts = [var.n8n_webhook_host]

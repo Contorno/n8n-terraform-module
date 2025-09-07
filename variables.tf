@@ -48,12 +48,6 @@ variable "n8n_webhook_host" {
   type        = string
 }
 
-variable "ingress_class_name" {
-    description = "Ingress class name"
-    type        = string
-    default     = "nginx"
-}
-
 variable "timezone" {
   description = "Timezone for n8n"
   type        = string
