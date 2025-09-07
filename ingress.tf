@@ -35,15 +35,11 @@ resource "kubernetes_ingress_v1" "n8n_webhooks" {
       "nginx.ingress.kubernetes.io/ssl-redirect"       = "true"
       "nginx.ingress.kubernetes.io/force-ssl-redirect" = "true"
       "nginx.ingress.kubernetes.io/server-snippet" = <<-EOT
-        # Only allow webhook paths
-        location ~ ^/webhook {
-          # Allow these requests to pass through
-        }
-        
-        # Block everything else
+        # Block everything except webhook paths
         location / {
-          return 403 '{"error": "Access denied to admin interface"}';
-          add_header Content-Type application/json;
+          if ($request_uri !~ ^/webhook) {
+            return 403 '{"error": "Access denied"}';
+          }
         }
       EOT
     }
