@@ -37,7 +37,7 @@ resource "kubernetes_ingress_v1" "n8n_webhooks" {
       "nginx.ingress.kubernetes.io/configuration-snippet" = <<-EOT
         # Block everything except webhook paths
         location / {
-          if ($request_uri !~ ^/webhook) {
+          if ($request_uri !~ "^/webhook(-test)?") {
             return 403 '{"error": "Access denied"}';
           }
         }
