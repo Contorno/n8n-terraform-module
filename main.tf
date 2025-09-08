@@ -66,7 +66,7 @@ resource "kubernetes_deployment" "n8n" {
 
           env {
             name  = "WEBHOOK_URL"
-            value = "https://${var.n8n_host}/"
+            value = "https://${var.n8n_webhook_host}:30802/"
           }
           env {
             name  = "N8N_HOST"
