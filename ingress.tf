@@ -36,10 +36,8 @@ resource "kubernetes_ingress_v1" "n8n_webhooks" {
       "nginx.ingress.kubernetes.io/force-ssl-redirect"    = "true"
       "nginx.ingress.kubernetes.io/configuration-snippet" = <<-EOT
         # Block everything except webhook paths
-        location / {
-          if ($request_uri !~ "^/webhook(-test)?") {
+          if ($uri !~ "^/webhook") {
             return 403 '{"error": "Access denied"}';
-          }
         }
     EOT
     }
