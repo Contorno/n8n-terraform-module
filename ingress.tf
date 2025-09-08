@@ -48,6 +48,7 @@ resource "kubernetes_ingress_v1" "n8n_webhooks" {
 
     tls {
       hosts = [var.n8n_webhook_host]
+      secret_name = "${var.name}-webhook-tls"
     }
 
     rule {
