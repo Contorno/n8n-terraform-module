@@ -32,8 +32,6 @@ resource "kubernetes_ingress_v1" "n8n_webhooks" {
     namespace = kubernetes_namespace.n8n.metadata[0].name
     annotations = {
       "cert-manager.io/cluster-issuer"                    = "letsencrypt-prod"
-      "nginx.ingress.kubernetes.io/ssl-redirect"          = "true"
-      "nginx.ingress.kubernetes.io/force-ssl-redirect"    = "true"
       "nginx.ingress.kubernetes.io/configuration-snippet" = <<-EOT
         # Block everything except webhook paths
           if ($uri !~ "^/webhook" && $uri !~ "^/.well-known/acme-challenge") {
