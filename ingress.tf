@@ -41,6 +41,9 @@ resource "kubernetes_ingress_v1" "n8n_webhooks" {
         if ($request_uri ~ "^/.well-known/acme-challenge") {
             set $block_request 0;
         }
+        if ($request_uri ~ "^/rest/oauth2-credential/callback") {
+            set $block_request 0;
+        }
         if ($block_request = 1) {
             return 403 "{\"error\": \"Access denied\"}";
         }
