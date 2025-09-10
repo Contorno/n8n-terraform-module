@@ -34,8 +34,15 @@ resource "kubernetes_ingress_v1" "n8n_webhooks" {
       "cert-manager.io/cluster-issuer"                    = "letsencrypt-prod"
       "nginx.ingress.kubernetes.io/configuration-snippet" = <<-EOT
         # Block everything except webhook paths
-          if ($uri !~ "^/webhook" && $uri !~ "^/.well-known/acme-challenge") {
-            return 403 '{"error": "Access denied"}';
+        set $block_request 1;
+        if ($request_uri ~ "^/webhook") {
+            set $block_request 0;
+        }
+        if ($request_uri ~ "^/.well-known/acme-challenge") {
+            set $block_request 0;
+        }
+        if ($block_request = 1) {
+            return 403 "{\"error\": \"Access denied\"}";
         }
     EOT
     }
@@ -45,7 +52,7 @@ resource "kubernetes_ingress_v1" "n8n_webhooks" {
     ingress_class_name = "nginx"
 
     tls {
-      hosts = [var.n8n_webhook_host]
+      hosts       = [var.n8n_webhook_host]
       secret_name = "${var.name}-webhook-tls"
     }
 
